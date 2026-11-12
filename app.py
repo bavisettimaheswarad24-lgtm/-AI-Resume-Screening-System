@@ -305,12 +305,19 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- LOAD MODELS ---
-@st.cache_resource(show_spinner=False)
-def load_models():
-    return AdvancedScreeningEngine(), KeywordExtractor()
-
-engine, extractor = load_models()
+# --- LOAD MODELS (CACHED & LAZY LOADED ON DEMAND) ---
+@st.cache_resource(show_spinner="⚡ Initializing AI Neural Models (Cross-Encoder & KeyBERT)...")
+def get_models():
+    import gc
+    import torch
+    try:
+        torch.set_num_threads(1)
+    except Exception:
+        pass
+    eng = AdvancedScreeningEngine()
+    ext = KeywordExtractor()
+    gc.collect()
+    return eng, ext
 
 # --- TOP NAVIGATION & HEADER ---
 st.markdown("""
@@ -480,6 +487,7 @@ if run_analysis:
             candidates_to_process.append({"name": name, "raw_text": text})
 
     with st.spinner("Executing Transformer Semantic Cross-Encoder & Evaluating Qualifications..."):
+            engine, extractor = get_models()
             jd_keywords = extractor.extract_keywords(active_jd, top_n=15)
             results = []
 

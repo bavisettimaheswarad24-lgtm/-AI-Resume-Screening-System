@@ -5,6 +5,11 @@ from config import CROSS_ENCODER_MODEL
 
 class AdvancedScreeningEngine:
     def __init__(self):
+        # Limit CPU threads to reduce memory footprint on cloud instances
+        try:
+            torch.set_num_threads(1)
+        except Exception:
+            pass
         device = "cuda" if torch.cuda.is_available() else "cpu"
         # CrossEncoders process query & document simultaneously for superior accuracy
         self.encoder = CrossEncoder(CROSS_ENCODER_MODEL, device=device)
